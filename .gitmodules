@@ -1,0 +1,3 @@
+[submodule "external/VMD-Converter-Core"]
+	path = external/VMD-Converter-Core
+	url = https://github.com/Vera-Firefly/VMD-Converter-Core.git

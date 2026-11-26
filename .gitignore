@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+.vs/
+artifacts/
+.impeccable/
+DESIGN.md
+PRODUCT.md
+docs/VALIDATION.md
+*.user

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <ItemGroup><Compile Include="../../src/Vmd2Anim.Neo/Conversion.cs" Link="Conversion.cs" /><Compile Include="../../src/Vmd2Anim.Neo/SourceIk.cs" Link="SourceIk.cs" /><Compile Include="../../src/Vmd2Anim.Neo/WorkspaceViewModel.cs" Link="WorkspaceViewModel.cs" /></ItemGroup>
+</Project>
