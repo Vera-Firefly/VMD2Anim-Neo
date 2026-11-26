@@ -11,7 +11,7 @@ if ($destination.Equals($source, [StringComparison]::OrdinalIgnoreCase) -or
     throw 'Package output must be outside the desktop directory.'
 }
 foreach ($name in @(
-    'VMD2Anim-Neo.exe', 'README.md', 'build-manifest.json',
+    'VMD2Anim-Neo.exe', 'README.md', 'README.zh-CN.md', 'LICENSE', 'docs/BUILD.md', 'build-manifest.json',
     'Core/VmdConverterCore.exe', 'Core/VmdConverterCore.Shared.dll',
     'Core/VmdConverterCore.Hps.dll', 'Core/UnityHps.Core.dll', 'Core/UnityHps.Fbx.dll',
     'VMD-Converter-Core-LICENSE.txt', 'Unity-HPS-LICENSE.txt', 'Unity-HPS-NOTICE.txt', 'ufbx-LICENSE.txt'

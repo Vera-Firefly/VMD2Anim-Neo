@@ -7,7 +7,9 @@
     <Border BorderBrush="#75FFFFFF" BorderThickness="0,0,1,0" Background="#45FFFFFF">
       <DockPanel Margin="14,24">
         <Border DockPanel.Dock="Top" Width="44" Height="44" Background="#285ED3" CornerRadius="14" Margin="0,0,0,26"><Viewbox Margin="10"><Path Data="M 0,22 L 0,0 11,0 22,22 22,0" Stroke="White" StrokeThickness="3" StrokeLineJoin="Round" /></Viewbox></Border>
-        <Button DockPanel.Dock="Top" ToolTip="转换工作区" AutomationProperties.Name="转换工作区" Click="Workspace_Click" Padding="11" Background="#D4E4FF" BorderBrush="#A6C2EE"><Path Data="M 2,7 L 20,7 M 15,2 L 20,7 15,12 M 20,18 L 2,18 M 7,13 L 2,18 7,23" Width="24" Height="25" Stroke="#285ED3" StrokeThickness="1.8" /></Button>
+        <Button x:Name="WorkspaceNav" Selector.IsSelected="{Binding IsWorkspacePage, Mode=OneWay}" DockPanel.Dock="Top" ToolTip="{local:Loc '转换工作区'}" AutomationProperties.Name="{local:Loc '转换工作区'}" Click="Workspace_Click" Style="{StaticResource NavigationButton}"><Path Data="M 2,7 L 20,7 M 15,2 L 20,7 15,12 M 20,18 L 2,18 M 7,13 L 2,18 7,23" Width="24" Height="25" Stroke="#285ED3" StrokeThickness="1.8" /></Button>
+        <Button x:Name="SettingsNav" Selector.IsSelected="{Binding IsSettingsPage, Mode=OneWay}" DockPanel.Dock="Top" ToolTip="{local:Loc '设置'}" AutomationProperties.Name="{local:Loc '设置'}" Click="Settings_Click" Margin="0,10,0,0" Style="{StaticResource NavigationButton}"><Path Data="M 3,5 L 21,5 M 3,12 L 21,12 M 3,19 L 21,19 M 8,2 L 8,8 M 16,9 L 16,15 M 10,16 L 10,22" Width="24" Height="24" Stroke="#285ED3" StrokeThickness="1.8" /></Button>
+        <Button x:Name="AboutNav" Selector.IsSelected="{Binding IsAboutPage, Mode=OneWay}" DockPanel.Dock="Top" ToolTip="{local:Loc '关于'}" AutomationProperties.Name="{local:Loc '关于'}" Click="About_Click" Margin="0,10,0,0" Style="{StaticResource NavigationButton}"><Path Data="M 12,2 A 10,10 0 1 1 11.99,2 M 12,10 L 12,18 M 12,6 L 12,7" Width="24" Height="24" Stroke="#285ED3" StrokeThickness="1.8" /></Button>
         <TextBlock DockPanel.Dock="Bottom" Text="NEO" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource Muted}" HorizontalAlignment="Center" />
         <Border />
       </DockPanel>
@@ -16,22 +18,22 @@
       <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
       <Grid Margin="0,0,0,24">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-        <StackPanel><TextBlock FontSize="25" FontWeight="SemiBold" Text="VMD2Anim Neo" /><TextBlock Text="让 MMD 动作，走进 Unity。" Foreground="{DynamicResource Muted}" Margin="0,6,0,0" /></StackPanel>
+        <StackPanel><TextBlock FontSize="25" FontWeight="SemiBold" Text="{Binding PageTitle}" /><TextBlock Text="{local:Loc '让 MMD 动作，走进 Unity。'}" Foreground="{DynamicResource Muted}" Margin="0,6,0,0" /></StackPanel>
         <Border Grid.Column="1" VerticalAlignment="Center" Background="#A8FFFFFF" BorderBrush="#EFFFFFFF" BorderThickness="1" CornerRadius="18" Padding="13,8"><StackPanel Orientation="Horizontal"><Ellipse Width="7" Height="7" Fill="{Binding CoreStatusBrush}" Margin="0,0,8,0" /><TextBlock Text="{Binding CoreStatus}" FontSize="12" /></StackPanel></Border>
       </Grid>
-      <Grid Grid.Row="1">
+      <Grid x:Name="WorkspacePage" Grid.Row="1">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="370" /><ColumnDefinition Width="24" /><ColumnDefinition Width="380" /></Grid.ColumnDefinitions>
         <Border Background="#A8FFFFFF" BorderBrush="#F0FFFFFF" BorderThickness="1" CornerRadius="18" Padding="22">
           <Border.Effect><DropShadowEffect Color="#587095" BlurRadius="24" ShadowDepth="7" Opacity="0.09" /></Border.Effect>
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-            <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal"><TextBlock Text="动作队列" FontSize="18" FontWeight="SemiBold" /><TextBlock Text="{Binding QueueCountText}" Margin="10,0,0,0" Foreground="{DynamicResource Muted}" /></StackPanel><Button Grid.Column="1" Content="添加 VMD" Click="AddVmd_Click" IsEnabled="{Binding IsIdle}" /></Grid>
+            <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal"><TextBlock Text="{local:Loc '动作队列'}" FontSize="18" FontWeight="SemiBold" /><TextBlock Text="{Binding QueueCountText}" Margin="10,0,0,0" Foreground="{DynamicResource Muted}" /></StackPanel><Button Grid.Column="1" Content="{local:Loc '添加 VMD'}" Click="AddVmd_Click" IsEnabled="{Binding IsIdle}" /></Grid>
             <Border Grid.Row="1" Background="#52E1EAF7" BorderBrush="#A9BFDF" BorderThickness="1" CornerRadius="12" Margin="0,0,0,16" Padding="18,20" AllowDrop="True">
-              <StackPanel HorizontalAlignment="Center"><Path Data="M 5,18 L 1,18 1,26 29,26 29,18 25,18 M 15,21 L 15,0 M 7,8 L 15,0 23,8" Width="30" Height="27" Stroke="#58769E" StrokeThickness="1.5" HorizontalAlignment="Center" Margin="0,0,0,12" /><TextBlock Text="把 VMD 文件拖到这里" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" /><TextBlock Text="支持多选；也可拖入 PMX 自动设置源模型" Style="{StaticResource Caption}" Margin="0,6,0,0" HorizontalAlignment="Center" TextAlignment="Center" /></StackPanel>
+              <StackPanel HorizontalAlignment="Center"><Path Data="M 5,18 L 1,18 1,26 29,26 29,18 25,18 M 15,21 L 15,0 M 7,8 L 15,0 23,8" Width="30" Height="27" Stroke="#58769E" StrokeThickness="1.5" HorizontalAlignment="Center" Margin="0,0,0,12" /><TextBlock Text="{local:Loc '把 VMD 文件拖到这里'}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" /><TextBlock Text="{local:Loc '支持多选；也可拖入 PMX 自动设置源模型'}" Style="{StaticResource Caption}" Margin="0,6,0,0" HorizontalAlignment="Center" TextAlignment="Center" /></StackPanel>
             </Border>
             <Grid Grid.Row="2"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-              <DockPanel Margin="8,0,8,8"><TextBlock Text="源动作" Style="{StaticResource Caption}" /><TextBlock Text="状态" Style="{StaticResource Caption}" HorizontalAlignment="Right" /></DockPanel>
-              <ListView x:Name="QueueList" Grid.Row="1" ItemsSource="{Binding Jobs}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" SelectionMode="Extended" KeyDown="Queue_KeyDown" AutomationProperties.Name="VMD 动作队列">
+              <DockPanel Margin="8,0,8,8"><TextBlock Text="{local:Loc '源动作'}" Style="{StaticResource Caption}" /><TextBlock Text="{local:Loc '状态'}" Style="{StaticResource Caption}" HorizontalAlignment="Right" /></DockPanel>
+              <ListView x:Name="QueueList" Grid.Row="1" ItemsSource="{Binding Jobs}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" SelectionMode="Extended" KeyDown="Queue_KeyDown" AutomationProperties.Name="{local:Loc 'VMD 动作队列'}">
                 <ListView.ItemTemplate><DataTemplate>
                   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <Grid ToolTip="{Binding InputPath}"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -39,65 +41,110 @@
                       <StackPanel Grid.Column="1" Margin="10,0,12,0"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" FontWeight="SemiBold" /><TextBlock Text="{Binding Detail}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,5,0,0" /></StackPanel>
                       <TextBlock Grid.Column="2" Text="{Binding Status}" Foreground="{Binding StatusBrush}" FontSize="12" />
                     </Grid>
-                    <Expander Grid.Row="1" Header="{Binding IkSummary}" Margin="39,6,0,0" IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=Window}}">
-                      <StackPanel Margin="0,8,0,0"><Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="128" /></Grid.ColumnDefinitions><TextBlock Text="全部源 IK" Style="{StaticResource Caption}" /><ComboBox Grid.Column="1" ItemsSource="{Binding IkModes}" SelectedIndex="{Binding IkDefaultIndex}" AutomationProperties.Name="此动作全部源 IK 模式" /></Grid>
-                        <ItemsControl ItemsSource="{Binding IkSwitches}"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="128" /></Grid.ColumnDefinitions><TextBlock Text="{Binding Label}" FontSize="12" Margin="0,0,8,0" /><ComboBox Grid.Column="1" ItemsSource="{x:Static local:IkMode.All}" SelectedItem="{Binding Mode}" AutomationProperties.Name="{Binding Label}" /></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <Expander Grid.Row="1" Style="{StaticResource MotionSettings}" Margin="0,12,0,0" IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=Window}}">
+                      <Expander.Header><Grid Margin="0,0,12,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><TextBlock Text="{local:Loc '动作设置'}" FontWeight="SemiBold" /><TextBlock Grid.Column="1" Text="{Binding IkSummary}" Style="{StaticResource Caption}" Margin="8,0,0,0" /><TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ExpressionSummary}" Style="{StaticResource Caption}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding ExpressionPath}" /><TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding OutputModeSummary}" Style="{StaticResource Caption}" Margin="0,4,0,0" /></Grid></Expander.Header>
+                      <StackPanel>
+                        <TextBlock Text="{local:Loc '动画输出'}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <ComboBox ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding SelectedOutputMode}" ItemTemplate="{StaticResource ChoiceLabel}" AutomationProperties.Name="{local:Loc '此动作的动画输出模式'}" />
+                        <TextBlock Text="{Binding OutputModeDescription}" Style="{StaticResource Caption}" Margin="0,7,0,16" />
+                        <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                          <TextBlock Text="{local:Loc 'Facial / 表情'}" FontWeight="SemiBold" />
+                          <Button Grid.Column="1" Content="{local:Loc '选择文件'}" Click="FacialBrowse_Click" Padding="10,6" AutomationProperties.Name="{local:Loc '选择此动作的 Facial 表情 VMD'}" />
+                          <Button Grid.Column="2" Content="{local:Loc '清除'}" Click="FacialClear_Click" IsEnabled="{Binding HasExpression}" Margin="6,0,0,0" Padding="10,6" AutomationProperties.Name="{local:Loc '清除此动作的 Facial 表情 VMD'}" />
+                        </Grid>
+                        <TextBox Text="{Binding ExpressionPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding ExpressionPath}" AutomationProperties.Name="{local:Loc '此动作的 Facial 表情 VMD 路径'}" AllowDrop="True" PreviewDragOver="OnDragOver" PreviewDrop="Facial_Drop" />
+                        <TextBlock Text="{local:Loc '可选择或拖入独立表情 VMD；留空使用默认表情设置。'}" Style="{StaticResource Caption}" Margin="0,7,0,0" />
+                        <Border Height="1" Background="{DynamicResource Line}" Margin="0,18,0,16" />
+                        <TextBlock Text="{local:Loc '源 IK'}" FontWeight="SemiBold" Margin="0,0,0,10" />
+                        <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="128" /></Grid.ColumnDefinitions><TextBlock Text="{local:Loc '全部源 IK'}" Style="{StaticResource Caption}" /><ComboBox Grid.Column="1" ItemsSource="{Binding IkModes}" ItemTemplate="{StaticResource ChoiceLabel}" SelectedIndex="{Binding IkDefaultIndex}" AutomationProperties.Name="{local:Loc '此动作全部源 IK 模式'}" /></Grid>
+                        <ItemsControl ItemsSource="{Binding IkSwitches}"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="128" /></Grid.ColumnDefinitions><TextBlock Text="{Binding Label}" FontSize="12" Margin="0,0,8,0" /><ComboBox Grid.Column="1" ItemsSource="{x:Static local:IkMode.All}" ItemTemplate="{StaticResource ChoiceLabel}" SelectedItem="{Binding Mode}" AutomationProperties.Name="{Binding Label}" /></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                       </StackPanel>
                     </Expander>
                   </Grid>
                 </DataTemplate></ListView.ItemTemplate>
               </ListView>
-              <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsQueueEmpty, Converter={StaticResource BoolVisibility}}" IsHitTestVisible="False" Margin="16"><TextBlock Text="下一段动作，从这里开始" HorizontalAlignment="Center" Foreground="{DynamicResource Muted}" FontSize="15" /><TextBlock Text="添加动作后，在右侧选择 PMX 并设置输出。" Style="{StaticResource Caption}" Margin="0,8,0,0" TextAlignment="Center" /></StackPanel>
+              <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsQueueEmpty, Converter={StaticResource BoolVisibility}}" IsHitTestVisible="False" Margin="16"><TextBlock Text="{local:Loc '下一段动作，从这里开始'}" HorizontalAlignment="Center" Foreground="{DynamicResource Muted}" FontSize="15" /><TextBlock Text="{local:Loc '添加动作后，在右侧选择 PMX 并设置输出。'}" Style="{StaticResource Caption}" Margin="0,8,0,0" TextAlignment="Center" /></StackPanel>
               <Grid Grid.Row="2" Margin="0,12,0,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                <Button Content="移除所选" Click="Remove_Click" IsEnabled="{Binding IsIdle}" HorizontalAlignment="Left" Height="36" Padding="12,7" />
-                <Button Grid.Column="1" Content="打开输出目录" Click="OpenOutput_Click" HorizontalAlignment="Right" Height="36" Padding="12,7" />
+                <Button Content="{local:Loc '移除所选'}" Click="Remove_Click" IsEnabled="{Binding IsIdle}" HorizontalAlignment="Left" Height="36" Padding="12,7" />
+                <Button Grid.Column="1" Content="{local:Loc '打开输出目录'}" Click="OpenOutput_Click" HorizontalAlignment="Right" Height="36" Padding="12,7" />
                 <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding PendingText}" Style="{StaticResource Caption}" Margin="2,6,0,0" />
               </Grid>
             </Grid>
-            <Expander Grid.Row="3" Header="运行日志" IsExpanded="{Binding ShowLog}" Margin="0,16,0,0"><TextBox x:Name="LogBox" Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" Height="130" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono, Consolas" FontSize="11" TextChanged="Log_TextChanged" AutomationProperties.Name="转换运行日志" /></Expander>
+            <Expander Grid.Row="3" Header="{local:Loc '运行日志'}" IsExpanded="{Binding ShowLog}" Margin="0,16,0,0"><TextBox x:Name="LogBox" Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" Height="130" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono, Consolas" FontSize="11" TextChanged="Log_TextChanged" AutomationProperties.Name="{local:Loc '转换运行日志'}" /></Expander>
           </Grid>
         </Border>
         <Border Grid.Column="2" Background="#BFFFFFFF" BorderBrush="#F5FFFFFF" BorderThickness="1" CornerRadius="18">
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="22,22,18,20">
             <StackPanel x:Name="SettingsPanel" IsEnabled="{Binding IsIdle}">
-              <TextBlock Text="转换设置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,20" />
-              <TextBlock Text="源模型" FontWeight="SemiBold" Margin="0,0,0,7" />
-              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding PmxPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="PMX 提供源骨架和 IK 约束" AutomationProperties.Name="源 PMX 模型路径" LostFocus="PmxPath_LostFocus" TextChanged="PmxPath_Changed" /><Button Grid.Column="1" Content="浏览" Tag="PmxPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
-              <TextBlock Text="必需 · PMX 骨架与 IK" Style="{StaticResource Caption}" Margin="0,6,0,8" /><Button Content="读取源 IK" Click="ReadIk_Click" HorizontalAlignment="Left" Padding="10,6" /><TextBlock Text="{Binding IkInfo}" Style="{StaticResource Caption}" Margin="0,7,0,20" />
-              <TextBlock Text="目标骨架" FontWeight="SemiBold" Margin="0,0,0,7" />
-              <ComboBox ItemsSource="{Binding TargetKinds}" SelectedIndex="{Binding TargetIndex}" AutomationProperties.Name="目标骨架类型" />
-              <Grid Margin="0,8,0,0" Visibility="{Binding HasTarget, Converter={StaticResource BoolVisibility}}"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding TargetPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="目标骨架文件路径" /><Button Grid.Column="1" Content="浏览" Tag="TargetPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
+              <TextBlock Text="{local:Loc '转换设置'}" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,20" />
+              <TextBlock Text="{local:Loc '源模型'}" FontWeight="SemiBold" Margin="0,0,0,7" />
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding PmxPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="{local:Loc 'PMX 提供源骨架和 IK 约束'}" AutomationProperties.Name="{local:Loc '源 PMX 模型路径'}" LostFocus="PmxPath_LostFocus" TextChanged="PmxPath_Changed" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Tag="PmxPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
+              <TextBlock Text="{local:Loc '必需 · PMX 骨架与 IK'}" Style="{StaticResource Caption}" Margin="0,6,0,8" /><Button Content="{local:Loc '读取源 IK'}" Click="ReadIk_Click" HorizontalAlignment="Left" Padding="10,6" /><TextBlock Text="{Binding IkInfo}" Style="{StaticResource Caption}" Margin="0,7,0,20" />
+              <TextBlock Text="{local:Loc '目标骨架'}" FontWeight="SemiBold" Margin="0,0,0,7" />
+              <ComboBox ItemsSource="{Binding TargetKinds}" ItemTemplate="{StaticResource ChoiceLabel}" SelectedIndex="{Binding TargetIndex}" AutomationProperties.Name="{local:Loc '目标骨架类型'}" />
+              <Grid Margin="0,8,0,0" Visibility="{Binding HasTarget, Converter={StaticResource BoolVisibility}}"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding TargetPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '目标骨架文件路径'}" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Tag="TargetPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
               <TextBlock Text="{Binding TargetHint}" Style="{StaticResource Caption}" Margin="0,7,0,20" />
-              <TextBlock Text="动画输出" FontWeight="SemiBold" Margin="0,0,0,7" />
-              <ComboBox ItemsSource="{Binding OutputModes}" SelectedItem="{Binding SelectedMode}" DisplayMemberPath="Label" IsEnabled="{Binding HasTarget}" AutomationProperties.Name="动画输出模式" />
+              <TextBlock Text="{local:Loc '动画输出'}" FontWeight="SemiBold" Margin="0,0,0,7" />
+              <ComboBox ItemsSource="{Binding OutputModes}" SelectedItem="{Binding SelectedMode}" ItemTemplate="{StaticResource ChoiceLabel}" IsEnabled="{Binding HasTarget}" AutomationProperties.Name="{local:Loc '动画输出模式'}" />
               <TextBlock Text="{Binding SelectedMode.Description}" Style="{StaticResource Caption}" Margin="0,7,0,18" />
-              <TextBlock Text="输出目录" FontWeight="SemiBold" Margin="0,0,0,7" />
-              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Anim 输出目录" /><Button Grid.Column="1" Content="浏览" Click="OutputBrowse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
-              <TextBlock Text="同名文件自动编号，保留已有结果。" Style="{StaticResource Caption}" Margin="0,6,0,18" />
-              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><StackPanel><TextBlock Text="采样率" Margin="0,0,0,7" /><ComboBox ItemsSource="{Binding SampleRates}" SelectedItem="{Binding SampleRate}" AutomationProperties.Name="采样率 FPS" /></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="位置缩放" Margin="0,0,0,7" /><TextBox Text="{Binding PositionScale, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="位置缩放" /></StackPanel></Grid>
-              <CheckBox Content="烘焙表情 / BlendShape" IsChecked="{Binding BakeMorphs}" Margin="0,18,0,8" />
-              <Expander Header="高级参数" Margin="0,10,0,0"><StackPanel Margin="0,12,0,0">
-                <TextBlock Text="坐标转换" Margin="0,0,0,7" /><ComboBox ItemsSource="{Binding Coordinates}" SelectedIndex="{Binding CoordinateIndex}" AutomationProperties.Name="坐标转换" />
-                <TextBlock Text="求解轮数（1–20）" Margin="0,14,0,7" /><TextBox Text="{Binding Passes, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="求解轮数" />
-                <TextBlock Text="帧线程数（1–256）" Margin="0,14,0,7" /><TextBox Text="{Binding Threads, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="帧线程数" />
-                <TextBlock Text="姿态缓存预算 MiB（32–8192）" Margin="0,14,0,7" /><TextBox Text="{Binding MemoryMb, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="姿态缓存预算" />
-                <TextBlock Text="限定时长 · 秒（留空为完整动作）" Margin="0,14,0,7" /><TextBox Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="限定动作时长" />
-                <TextBlock Text="上肢插值误差（0–0.05；0 为线性）" Margin="0,14,0,7" /><TextBox Text="{Binding UpperTangentError, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="上肢插值误差" />
-                <CheckBox Content="保持 FK 旋转连续性" IsChecked="{Binding FkContinuity}" Margin="0,14,0,4" />
-                <TextBlock Text="表情 VMD · 可选" Margin="0,14,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding ExpressionPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="附加表情 VMD 路径" /><Button Grid.Column="1" Content="浏览" Tag="ExpressionPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
-                <TextBlock Text="形态键映射 JSON · 可选" Margin="0,14,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding MorphMapPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="形态键映射路径" /><Button Grid.Column="1" Content="浏览" Tag="MorphMapPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
-              </StackPanel></Expander>
-              <Expander Header="转换核心" Margin="0,12,0,0"><StackPanel Margin="0,12,0,0"><TextBlock Text="VmdConverterCore.exe" Margin="0,0,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding CorePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="转换核心 EXE 路径" /><Button Grid.Column="1" Content="浏览" Tag="CorePath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid><TextBlock Text="从 Git submodule 构建。HPS 运行库需与核心位于同一目录。" Style="{StaticResource Caption}" Margin="0,8,0,0" /><Button Content="复制转换命令" Click="CopyCommand_Click" HorizontalAlignment="Left" Margin="0,12,0,0" /></StackPanel></Expander>
+              <TextBlock Text="{local:Loc '输出目录'}" FontWeight="SemiBold" Margin="0,0,0,7" />
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc 'Anim 输出目录'}" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Click="OutputBrowse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
+              <TextBlock Text="{local:Loc '同名文件自动编号，保留已有结果。'}" Style="{StaticResource Caption}" Margin="0,6,0,18" />
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{local:Loc '采样率'}" Margin="0,0,0,7" /><ComboBox ItemsSource="{Binding SampleRates}" SelectedItem="{Binding SampleRate}" Height="36" AutomationProperties.Name="{local:Loc '采样率 FPS'}" /></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="{local:Loc '位置缩放'}" Margin="0,0,0,7" /><TextBox Text="{Binding PositionScale, UpdateSourceTrigger=PropertyChanged}" Height="36" AutomationProperties.Name="{local:Loc '位置缩放'}" /></StackPanel></Grid>
+
             </StackPanel>
           </ScrollViewer>
         </Border>
       </Grid>
+      <Border x:Name="PreferencesPage" Grid.Row="1" Visibility="Collapsed" Background="#BFFFFFFF" BorderBrush="#F5FFFFFF" BorderThickness="1" CornerRadius="18">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28,24">
+          <StackPanel MaxWidth="740" HorizontalAlignment="Left" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}">
+            <TextBlock Text="{local:Loc '设置'}" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="{local:Loc '语言与转换默认值；更改会在关闭窗口时保存。'}" Style="{StaticResource Caption}" Margin="0,8,0,20" />
+            <TextBlock Text="{local:Loc '界面语言'}" FontWeight="SemiBold" Margin="0,0,0,8" />
+            <ComboBox ItemsSource="{Binding Languages}" ItemTemplate="{StaticResource ChoiceLabel}" SelectedIndex="{Binding LanguageIndex}" MaxWidth="360" HorizontalAlignment="Left" MinWidth="280" AutomationProperties.Name="{local:Loc '界面语言'}" />
+            <StackPanel IsEnabled="{Binding IsIdle}">
+              <CheckBox Content="{local:Loc '烘焙表情 / BlendShape'}" IsChecked="{Binding BakeMorphs}" Margin="0,18,0,8" />
+              <StackPanel Margin="0,20,0,0"><TextBlock Text="{local:Loc '高级参数'}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" /><StackPanel>
+                <TextBlock Text="{local:Loc '坐标转换'}" Margin="0,0,0,7" /><ComboBox ItemsSource="{Binding Coordinates}" ItemTemplate="{StaticResource ChoiceLabel}" SelectedIndex="{Binding CoordinateIndex}" AutomationProperties.Name="{local:Loc '坐标转换'}" />
+                <TextBlock Text="{local:Loc '求解轮数（1–20）'}" Margin="0,14,0,7" /><TextBox Text="{Binding Passes, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '求解轮数'}" />
+                <TextBlock Text="{local:Loc '帧线程数（1–256）'}" Margin="0,14,0,7" /><TextBox Text="{Binding Threads, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '帧线程数'}" />
+                <TextBlock Text="{local:Loc '姿态缓存预算 MiB（32–8192）'}" Margin="0,14,0,7" /><TextBox Text="{Binding MemoryMb, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '姿态缓存预算'}" />
+                <TextBlock Text="{local:Loc '限定时长 · 秒（留空为完整动作）'}" Margin="0,14,0,7" /><TextBox Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '限定动作时长'}" />
+                <TextBlock Text="{local:Loc '上肢插值误差（0–0.05；0 为线性）'}" Margin="0,14,0,7" /><TextBox Text="{Binding UpperTangentError, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '上肢插值误差'}" />
+                <CheckBox Content="{local:Loc '保持 FK 旋转连续性'}" IsChecked="{Binding FkContinuity}" Margin="0,14,0,4" />
+                <TextBlock Text="{local:Loc '默认表情 VMD · 可选'}" Margin="0,14,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding ExpressionPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '默认表情 VMD 路径'}" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Tag="ExpressionPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid><TextBlock Text="{local:Loc '应用于未单独指定 Facial 的动作；均留空则使用动作自身表情。'}" Style="{StaticResource Caption}" Margin="0,7,0,0" />
+                <TextBlock Text="{local:Loc '形态键映射 JSON · 可选'}" Margin="0,14,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding MorphMapPath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '形态键映射路径'}" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Tag="MorphMapPath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid>
+              </StackPanel></StackPanel>
+              <StackPanel Margin="0,28,0,0"><TextBlock Text="{local:Loc '转换核心'}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,16" /><TextBlock Text="VmdConverterCore.exe" Margin="0,0,0,7" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding CorePath, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{local:Loc '转换核心 EXE 路径'}" /><Button Grid.Column="1" Content="{local:Loc '浏览'}" Tag="CorePath" Click="Browse_Click" Margin="7,0,0,0" Padding="12,8" /></Grid><TextBlock Text="{local:Loc 'HPS 运行库需与核心位于同一目录。'}" Style="{StaticResource Caption}" Margin="0,8,0,0" /><Button Content="{local:Loc '复制转换命令'}" Click="CopyCommand_Click" HorizontalAlignment="Left" Margin="0,12,0,0" /></StackPanel>
+            </StackPanel>
+            <Button Content="{local:Loc '保存设置'}" Click="SaveSettings_Click" HorizontalAlignment="Left" Margin="0,24,0,8" />
+            <TextBlock Text="{Binding SettingsFeedback}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+      <Border x:Name="AboutPage" Grid.Row="1" Visibility="Collapsed" Background="#BFFFFFFF" BorderBrush="#F5FFFFFF" BorderThickness="1" CornerRadius="18" Padding="32">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel MaxWidth="740" HorizontalAlignment="Left">
+          <TextBlock Text="VMD2Anim Neo" FontSize="28" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding AppVersion}" Foreground="{DynamicResource Muted}" Margin="0,8,0,24" />
+          <TextBlock Text="{local:Loc '将 MMD 的 VMD 动作转换为 Unity 动画，支持 Humanoid、FK 及批量处理。'}" TextWrapping="Wrap" FontSize="15" />
+          <WrapPanel Margin="0,24,0,24"><Button Content="{local:Loc '项目主页'}" Tag="https://github.com/Vera-Firefly/VMD2Anim-Neo" Click="Link_Click" Margin="0,0,10,8" /><Button Content="{local:Loc '使用说明'}" Click="Readme_Click" Margin="0,0,10,8" /><Button Content="{local:Loc '报告问题'}" Tag="https://github.com/Vera-Firefly/VMD2Anim-Neo/issues" Click="Link_Click" Margin="0,0,0,8" /></WrapPanel>
+          <TextBlock Text="{local:Loc '开源许可'}" FontSize="18" FontWeight="SemiBold" />
+          <TextBlock Text="{local:Loc 'VMD2Anim Neo 采用 Apache License 2.0。'}" TextWrapping="Wrap" Margin="0,10,0,12" />
+          <Button Content="{local:Loc '查看许可证'}" Click="License_Click" HorizontalAlignment="Left" />
+          <Border Height="1" Background="{DynamicResource Line}" Margin="0,28,0,24" />
+          <TextBlock Text="{local:Loc '转换引擎与依赖'}" FontSize="18" FontWeight="SemiBold" />
+          <TextBlock Text="{local:Loc 'VMD-Converter-Core 与 Unity-HPS 采用 Apache-2.0；ufbx 采用 MIT 或公有领域双重许可。依赖的许可与声明随程序附带。'}" TextWrapping="Wrap" Margin="0,10,0,16" />
+          <Button Content="VMD-Converter-Core" Tag="https://github.com/Vera-Firefly/VMD-Converter-Core" Click="Link_Click" HorizontalAlignment="Left" />
+          <TextBlock Text="{Binding CoreBuild}" Style="{StaticResource Caption}" Margin="0,14,0,0" />
+        </StackPanel></ScrollViewer>
+      </Border>
       <Border Grid.Row="2" Margin="0,20,0,0" Padding="18,14" CornerRadius="14" Background="#D4FFFFFF" BorderThickness="1" BorderBrush="#F0FFFFFF">
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
           <StackPanel VerticalAlignment="Center" Margin="0,0,20,0"><TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding ProgressText}" Style="{StaticResource Caption}" Margin="0,5,0,0" /><ProgressBar Height="3" Margin="0,10,0,0" Maximum="100" Value="{Binding ProgressValue}" IsIndeterminate="{Binding IsRunning}" Foreground="{DynamicResource Accent}" Background="#D6E1F0" /></StackPanel>
-          <Button Grid.Column="1" Content="取消" Click="Cancel_Click" IsEnabled="{Binding IsRunning}" Margin="0,0,10,0" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="{local:Loc '取消'}" Click="Cancel_Click" IsEnabled="{Binding IsRunning}" Margin="0,0,10,0" VerticalAlignment="Center" />
           <Button Grid.Column="2" Content="{Binding ConvertButtonText}" Style="{StaticResource Primary}" Click="Convert_Click" IsEnabled="{Binding CanConvert}" VerticalAlignment="Center" MinWidth="142" />
         </Grid>
       </Border>

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -6,13 +7,22 @@ using System.Text.Json;
 
 namespace Vmd2Anim.Neo;
 
-public sealed record OutputMode(string Value, string Label, string Description)
+// WPF tracks choices by identity; event subscriptions must not change equality or hash codes.
+public sealed class OutputMode(string value, string labelKey, string descriptionKey) : INotifyPropertyChanged
 {
+    public string Value { get; } = value;
+    public string LabelKey { get; } = labelKey;
+    public string DescriptionKey { get; } = descriptionKey;
+    public string Label => L.T(LabelKey);
+    public string Description => L.T(DescriptionKey);
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public void RefreshLanguage() => PropertyChanged?.Invoke(this, new(null));
     public override string ToString() => Label;
 }
 
 public sealed record ConversionOptions
 {
+    public string Language { get; init; } = "system";
     public string CorePath { get; init; } = "";
     public string PmxPath { get; init; } = "";
     public int TargetIndex { get; init; }
@@ -35,44 +45,44 @@ public sealed record ConversionOptions
 
     public void Validate(IReadOnlyList<string> inputs, bool requireRuntime = true)
     {
-        if (inputs.Count == 0) throw new ArgumentException("请先添加至少一个 VMD 动作。");
-        RequireFile(CorePath, ".exe", "转换核心");
+        if (inputs.Count == 0) throw new ArgumentException(L.T("请先添加至少一个 VMD 动作。"));
+        RequireFile(CorePath, ".exe", L.T("转换核心"));
         if (!Path.GetFileName(CorePath).Equals("VmdConverterCore.exe", StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException("请选择 VmdConverterCore.exe。");
+            throw new ArgumentException(L.T("请选择 VmdConverterCore.exe。"));
         if (requireRuntime)
         {
             var directory = Path.GetDirectoryName(Path.GetFullPath(CorePath))!;
             foreach (var name in new[] { "VmdConverterCore.Shared.dll", "VmdConverterCore.Hps.dll", "UnityHps.Core.dll", "UnityHps.Fbx.dll" })
-                if (!File.Exists(Path.Combine(directory, name))) throw new ArgumentException($"核心缺少 {name}，请重新构建或选择完整的 Core 运行目录。");
+                if (!File.Exists(Path.Combine(directory, name))) throw new ArgumentException(L.F("核心缺少 {0}，请重新构建或选择完整的 Core 运行目录。", name));
         }
-        RequireFile(PmxPath, ".pmx", "源模型");
-        foreach (var input in inputs) RequireFile(input, ".vmd", "动作文件");
-        if (TargetIndex is < 0 or > 3) throw new ArgumentException("目标骨架类型无效。");
-        if (TargetIndex > 0) RequireFile(TargetPath, TargetIndex == 1 ? ".fbx" : ".json", "目标骨架");
-        if (TargetIndex == 0 && OutputKind != "humanoid-ik") throw new ArgumentException("目标拟合模式需要选择目标骨架。");
-        if (!OutputKinds.Contains(OutputKind)) throw new ArgumentException("输出模式无效。");
-        if (!string.IsNullOrWhiteSpace(ExpressionPath)) RequireFile(ExpressionPath, ".vmd", "表情文件");
-        if (!string.IsNullOrWhiteSpace(MorphMapPath)) RequireFile(MorphMapPath, ".json", "形态键映射");
-        if (string.IsNullOrWhiteSpace(OutputDirectory)) throw new ArgumentException("请选择输出目录。");
+        RequireFile(PmxPath, ".pmx", L.T("源模型"));
+        foreach (var input in inputs) RequireFile(input, ".vmd", L.T("动作文件"));
+        if (TargetIndex is < 0 or > 3) throw new ArgumentException(L.T("目标骨架类型无效。"));
+        if (TargetIndex > 0) RequireFile(TargetPath, TargetIndex == 1 ? ".fbx" : ".json", L.T("目标骨架"));
+        if (TargetIndex == 0 && OutputKind != "humanoid-ik") throw new ArgumentException(L.T("目标拟合模式需要选择目标骨架。"));
+        if (!OutputKinds.Contains(OutputKind)) throw new ArgumentException(L.T("输出模式无效。"));
+        if (!string.IsNullOrWhiteSpace(ExpressionPath)) RequireFile(ExpressionPath, ".vmd", L.T("表情文件"));
+        if (!string.IsNullOrWhiteSpace(MorphMapPath)) RequireFile(MorphMapPath, ".json", L.T("形态键映射"));
+        if (string.IsNullOrWhiteSpace(OutputDirectory)) throw new ArgumentException(L.T("请选择输出目录。"));
         var fullOutput = Path.GetFullPath(OutputDirectory);
-        if (File.Exists(fullOutput)) throw new ArgumentException("输出目录指向了一个文件，请选择文件夹。");
-        if (SampleRate is < 1 or > 240) throw new ArgumentException("采样率必须为 1–240 FPS。");
-        if (!double.IsFinite(PositionScale) || PositionScale <= 0 || PositionScale > float.MaxValue) throw new ArgumentException("位置缩放必须为有限正数。");
-        if (Coordinate is < 0 or > 3 || Passes is < 1 or > 20) throw new ArgumentException("坐标转换或求解轮数无效。");
-        if (Threads is < 1 or > 256 || MemoryMb is < 32 or > 8192) throw new ArgumentException("线程数应为 1–256，姿态缓存预算应为 32–8192 MiB。");
-        if (Duration.HasValue && (!double.IsFinite(Duration.Value) || Duration.Value <= 0 || Duration.Value > float.MaxValue)) throw new ArgumentException("限定时长必须为有限正数，或留空。");
-        if (!double.IsFinite(UpperTangentError) || UpperTangentError is < 0 or > .05) throw new ArgumentException("上肢插值误差必须为 0–0.05。");
+        if (File.Exists(fullOutput)) throw new ArgumentException(L.T("输出目录指向了一个文件，请选择文件夹。"));
+        if (SampleRate is < 1 or > 240) throw new ArgumentException(L.T("采样率必须为 1–240 FPS。"));
+        if (!double.IsFinite(PositionScale) || PositionScale <= 0 || PositionScale > float.MaxValue) throw new ArgumentException(L.T("位置缩放必须为有限正数。"));
+        if (Coordinate is < 0 or > 3 || Passes is < 1 or > 20) throw new ArgumentException(L.T("坐标转换或求解轮数无效。"));
+        if (Threads is < 1 or > 256 || MemoryMb is < 32 or > 8192) throw new ArgumentException(L.T("线程数应为 1–256，姿态缓存预算应为 32–8192 MiB。"));
+        if (Duration.HasValue && (!double.IsFinite(Duration.Value) || Duration.Value <= 0 || Duration.Value > float.MaxValue)) throw new ArgumentException(L.T("限定时长必须为有限正数，或留空。"));
+        if (!double.IsFinite(UpperTangentError) || UpperTangentError is < 0 or > .05) throw new ArgumentException(L.T("上肢插值误差必须为 0–0.05。"));
         foreach (var pair in SourceIk)
             if (string.IsNullOrWhiteSpace(pair.Key) || pair.Value is not ("on" or "off" or "vmd"))
-                throw new ArgumentException("源 IK 名称或模式无效，请重新读取 PMX IK。");
+                throw new ArgumentException(L.T("源 IK 名称或模式无效，请重新读取 PMX IK。"));
     }
 
     public static readonly string[] OutputKinds = ["humanoid-ik", "target-humanoid", "target-humanoid-leg", "target-humanoid-arm", "target-humanoid-all", "target-fk", "target-fk-leg", "target-fk-arm", "target-fk-all"];
 
     private static void RequireFile(string path, string extension, string label)
     {
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) throw new ArgumentException($"找不到{label}，请检查路径。");
-        if (!Path.GetExtension(path).Equals(extension, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException($"{label}需要 {extension} 文件。");
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) throw new ArgumentException(L.F("找不到{0}，请检查路径。", label));
+        if (!Path.GetExtension(path).Equals(extension, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException(L.F("{0}需要 {1} 文件。", label, extension));
     }
 
     public ProcessStartInfo BuildStartInfo(string input, string output)
@@ -132,7 +142,7 @@ public static class OutputPaths
             }
             catch (IOException) when (File.Exists(path)) { }
         }
-        throw new IOException("同名输出过多，请选择其他输出目录。");
+        throw new IOException(L.T("同名输出过多，请选择其他输出目录。"));
     }
 }
 
@@ -165,9 +175,9 @@ public static class CoreRunner
         var output = await stdout.ConfigureAwait(false);
         var error = await stderr.ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        if (process.ExitCode != 0) throw new IOException("无法读取 PMX IK：" + error.Trim());
+        if (process.ExitCode != 0) throw new IOException(L.T("无法读取 PMX IK：") + error.Trim());
         return JsonSerializer.Deserialize<SourceIkBone[]>(output, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-            ?? throw new IOException("Core 未返回 IK 骨骼列表。");
+            ?? throw new IOException(L.T("Core 未返回 IK 骨骼列表。"));
     }
 
     public static async Task<CoreResult> RunAsync(ConversionOptions options, string input, string output, Action<string> log, CancellationToken token)
@@ -203,7 +213,7 @@ public static class CoreRunner
         }
         process.OutputDataReceived += (_, e) => Receive(e.Data, true);
         process.ErrorDataReceived += (_, e) => Receive(e.Data, false);
-        if (!process.Start()) throw new IOException("无法启动转换核心。");
+        if (!process.Start()) throw new IOException(L.T("无法启动转换核心。"));
         using var cancellation = token.Register(() =>
         {
             try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
@@ -214,9 +224,9 @@ public static class CoreRunner
         // Wait without cancellation so the process and both redirected streams are drained before cleanup.
         await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
-        if (process.ExitCode != 0) throw new IOException($"Core 退出码 {process.ExitCode}。\n" + string.Join(Environment.NewLine, tail));
+        if (process.ExitCode != 0) throw new IOException(L.F("Core 退出码 {0}。\n", process.ExitCode) + string.Join(Environment.NewLine, tail));
         if (result == null || !File.Exists(output) || new FileInfo(output).Length == 0 || !Path.GetFullPath(result.Output).Equals(Path.GetFullPath(output), StringComparison.OrdinalIgnoreCase))
-            throw new IOException("Core 未返回有效的 .anim 转换结果，请查看日志。");
+            throw new IOException(L.T("Core 未返回有效的 .anim 转换结果，请查看日志。"));
         return result;
     }
 }

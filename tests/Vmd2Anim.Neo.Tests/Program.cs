@@ -18,6 +18,7 @@ void Reject(ConversionOptions value, string input, string label)
 }
 try
 {
+    UiRegressionChecks.Run(Check);
     var input = Path.Combine(root, "日本語 动作 ' $x `test.vmd");
     var pmx = Path.Combine(root, "源模型.pmx");
     var core = Path.Combine(root, "VmdConverterCore.exe");
@@ -38,20 +39,52 @@ try
     workspace.ApplyIkBones(pmx, [new(1, "右足ＩＫ", "leg IK R"), new(2, "左足ＩＫ", "leg IK L")]);
     workspace.AddMotion(input); workspace.AddMotion(pmx);
     var firstJob = workspace.Jobs[0]; var otherJob = workspace.Jobs[1];
+    Check(firstJob.AvailableModes.Count == 2 && firstJob.AvailableModes.All(m => m.Value is "" or "humanoid-ik"), "Source-only motions offer no incompatible target modes");
+    workspace.TargetIndex = 1;
+    firstJob.SelectedOutputMode = firstJob.AvailableModes.Single(m => m.Value == "target-fk-all");
+    var modeDefaults = o with { TargetIndex = 1, OutputKind = "target-humanoid" };
+    var frozenMode = firstJob.WithOptions(modeDefaults);
+    firstJob.SelectedOutputMode = firstJob.AvailableModes[0];
+    Check(frozenMode.OutputKind == "target-fk-all" && firstJob.WithOptions(modeDefaults).OutputKind == "target-humanoid" && otherJob.WithOptions(modeDefaults).OutputKind == "target-humanoid", "Per-motion mode snapshots are independent and clearing follows global mode");
+    firstJob.SelectedOutputMode = firstJob.AvailableModes.Single(m => m.Value == "target-fk-arm");
+    workspace.LanguageIndex = 1;
+    var englishLabel = firstJob.SelectedOutputMode.Label;
+    Check(workspace.TargetKinds.Concat(workspace.Coordinates).Concat(workspace.OutputModes).Concat(firstJob.AvailableModes).All(m => !m.Label.Any(c => c is >= '\u4e00' and <= '\u9fff')) && IkMode.All.All(m => !m.Label.Any(c => c is >= '\u4e00' and <= '\u9fff')), "English covers all target, coordinate, output and IK choices");
+    workspace.LanguageIndex = 2;
+    Check(firstJob.SelectedOutputMode.Value == "target-fk-arm" && englishLabel != firstJob.SelectedOutputMode.Label && workspace.TargetIndex == 1 && workspace.Jobs.Count == 2, "Language switching preserves queue, target and stable per-motion mode IDs");
+    Check(workspace.Snapshot().Language == "zh-CN" && System.Text.Json.JsonSerializer.Deserialize<ConversionOptions>(System.Text.Json.JsonSerializer.Serialize(workspace.Snapshot()))!.Language == "zh-CN", "Explicit language preference round-trips in settings");
+    workspace.LanguageIndex = 0;
+    Check(workspace.Snapshot().Language == "system" && new ConversionOptions().Language == "system", "New and legacy settings default to following the system language");
+    Check(L.ResolveLanguage("system", CultureInfo.GetCultureInfo("zh-TW")) == "zh-CN" && L.ResolveLanguage("system", CultureInfo.GetCultureInfo("zh-CN")) == "zh-CN" && L.ResolveLanguage("system", CultureInfo.GetCultureInfo("ja-JP")) == "en" && L.ResolveLanguage("en", CultureInfo.GetCultureInfo("zh-CN")) == "en", "System language detection covers Chinese variants, English fallback and manual override");
+    workspace.TargetIndex = 0;
+    Check(firstJob.SelectedOutputMode.Value == "" && firstJob.WithOptions(o).OutputKind == "humanoid-ik", "Removing the target resets incompatible motion overrides to the global mode");
     firstJob.IkDefaultIndex = 2;
     firstJob.IkSwitches[1].Mode = IkMode.All[1];
-    var frozenIk = firstJob.WithIk(o);
+    var frozenIk = firstJob.WithOptions(o);
     firstJob.IkSwitches[0].Mode = IkMode.All[0];
-    Check(frozenIk.SourceIk["右足ＩＫ"] == "off" && frozenIk.SourceIk["左足ＩＫ"] == "on" && otherJob.WithIk(o).SourceIk.Count == 0, "Per-motion IK overrides are independent and frozen");
+    Check(frozenIk.SourceIk["右足ＩＫ"] == "off" && frozenIk.SourceIk["左足ＩＫ"] == "on" && otherJob.WithOptions(o).SourceIk.Count == 0, "Per-motion IK overrides are independent and frozen");
     var ikArgs = frozenIk.BuildStartInfo(input, Path.Combine(root, "ik.anim")).ArgumentList;
     Check(ikArgs.Count(a => a == "--ik") == 2 && ikArgs.Contains("右足ＩＫ=off") && ikArgs.Contains("左足ＩＫ=on"), "Per-bone source IK uses repeated shell-free CLI arguments");
+    var facial = Path.Combine(root, "独立 Facial ' $x.vmd"); File.WriteAllText(facial, "fixture");
+    var defaults = o with { ExpressionPath = input };
+    firstJob.ExpressionPath = facial;
+    var frozenFacial = firstJob.WithOptions(defaults);
+    firstJob.ExpressionPath = "";
+    Check(frozenFacial.ExpressionPath == facial && otherJob.WithOptions(defaults).ExpressionPath == input && firstJob.WithOptions(defaults).ExpressionPath == input,
+        "Facial overrides are frozen, independent and fall back to the shared default when cleared");
+    var facialArgs = frozenFacial.BuildStartInfo(input, Path.Combine(root, "facial.anim")).ArgumentList;
+    Check(facialArgs.Contains("--expression-vmd") && facialArgs.Contains(facial), "Facial VMD path is passed as a shell-free argument");
+    firstJob.ExpressionPath = "missing-facial.vmd";
+    Reject(firstJob.WithOptions(o), input, "Missing per-motion Facial is rejected before conversion");
+    firstJob.ExpressionPath = "";
+    Check(!firstJob.WithOptions(o).BuildStartInfo(input, Path.Combine(root, "original.anim")).ArgumentList.Contains("--expression-vmd"), "Empty Facial and default preserve the motion's own expressions");
     workspace.CompleteMotion(firstJob);
     Check(workspace.Jobs.Count == 1 && workspace.PendingText.Contains("1"), "Successful motion leaves queue and updates pending total");
     workspace.Jobs.Remove(otherJob);
     Check(workspace.IsQueueEmpty && workspace.PendingText.Contains("0") && workspace.ProgressText == workspace.PendingText, "Manual removal clears pending count and idle status");
     workspace.AddMotion(input); workspace.Jobs[0].IkDefaultIndex = 2;
     workspace.ApplyIkBones(pmx + "-changed", [new(3, "different IK", "")]);
-    Check(workspace.Jobs[0].WithIk(o).SourceIk.Count == 0, "Changing PMX clears incompatible per-motion overrides");
+    Check(workspace.Jobs[0].WithOptions(o).SourceIk.Count == 0, "Changing PMX clears incompatible per-motion overrides");
     foreach (var index in new[] { 1, 2, 3 })
     {
         var target = Path.Combine(root, index == 1 ? "target.fbx" : "rig.json"); File.WriteAllText(target, "{}");
@@ -92,9 +125,15 @@ try
         var overridden = real with { SourceIk = new() { [bones[0].Key] = "off" } };
         var overrideResult = await CoreRunner.RunAsync(overridden, motion, Path.Combine(root, "source-ik-off.anim"), _ => { }, CancellationToken.None);
         Check(overrideResult.Samples == 7, "Real Core converts with a per-motion source IK override");
+        var facialJob = new MotionJob(motion) { ExpressionPath = motion };
+        var facialResult = await CoreRunner.RunAsync(facialJob.WithOptions(real), motion, Path.Combine(root, "facial-override.anim"), _ => { }, CancellationToken.None);
+        Check(facialResult.Samples == 7 && facialResult.Bytes > 0, "Real Core accepts the per-motion expression VMD argument");
         if (args.Length >= 5)
         {
-            var target = real with { TargetIndex = 1, TargetPath = Path.GetFullPath(args[4]), OutputKind = "target-fk-all" };
+            var targetDefaults = real with { TargetIndex = 1, TargetPath = Path.GetFullPath(args[4]), OutputKind = "target-humanoid" };
+            facialJob.SetOutputModes(workspace.OutputModes);
+            facialJob.SelectedOutputMode = facialJob.AvailableModes.Single(m => m.Value == "target-fk-all");
+            var target = facialJob.WithOptions(targetDefaults);
             target.Validate([motion]);
             var targetOutput = Path.Combine(root, "目标FK.anim");
             var fk = await CoreRunner.RunAsync(target, motion, targetOutput, Console.WriteLine, CancellationToken.None);

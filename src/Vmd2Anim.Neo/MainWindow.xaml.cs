@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
@@ -20,6 +21,12 @@ public partial class MainWindow : Window
         vm.LoadSettings();
         InitializeComponent();
         DataContext = vm;
+        PreviewMouseDown += (_, _) => FocusCue.SetKeyboardMode(this, false);
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key is Key.Tab or Key.Up or Key.Down or Key.Left or Key.Right or Key.Home or Key.End or Key.PageUp or Key.PageDown)
+                FocusCue.SetKeyboardMode(this, true);
+        };
         SourceInitialized += (_, _) => WindowMaterial.Apply(this);
         if (SystemParameters.HighContrast)
         {
@@ -35,7 +42,7 @@ public partial class MainWindow : Window
 
     private void AddVmd_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Title = "添加 VMD 动作", Filter = "VMD 动作 (*.vmd)|*.vmd", Multiselect = true, CheckFileExists = true };
+        var dialog = new OpenFileDialog { Title = L.T("添加 VMD 动作"), Filter = L.T("VMD 动作 (*.vmd)|*.vmd"), Multiselect = true, CheckFileExists = true };
         if (dialog.ShowDialog(this) == true) AddPaths(dialog.FileNames);
     }
 
@@ -59,8 +66,8 @@ public partial class MainWindow : Window
             }
             catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException) { rejected.Add(raw); }
         }
-        if (rejected.Count > 0) ShowError("部分文件未添加：仅支持有效的 VMD 和 PMX 文件。", string.Join(Environment.NewLine, rejected));
-        else if (vm.Jobs.Count > 0) { vm.StatusText = "动作已加入，检查设置后即可转换"; vm.ProgressText = vm.PendingText; }
+        if (rejected.Count > 0) ShowError(L.T("部分文件未添加：仅支持有效的 VMD 和 PMX 文件。"), string.Join(Environment.NewLine, rejected));
+        else if (vm.Jobs.Count > 0) { vm.StatusText = "动作已加入，检查设置后即可转换"; vm.ProgressText = "queue-pending"; }
     }
 
     private void Browse_Click(object sender, RoutedEventArgs e)
@@ -68,13 +75,13 @@ public partial class MainWindow : Window
         if (sender is not Button { Tag: string name }) return;
         string filter = name switch
         {
-            "PmxPath" => "PMX 模型 (*.pmx)|*.pmx",
-            "TargetPath" when vm.TargetIndex == 1 => "FBX 模型 (*.fbx)|*.fbx",
-            "TargetPath" or "MorphMapPath" => "JSON 文件 (*.json)|*.json",
-            "CorePath" => "转换核心 (VmdConverterCore.exe)|VmdConverterCore.exe",
-            _ => "VMD 动作 (*.vmd)|*.vmd"
+            "PmxPath" => L.T("PMX 模型 (*.pmx)|*.pmx"),
+            "TargetPath" when vm.TargetIndex == 1 => L.T("FBX 模型 (*.fbx)|*.fbx"),
+            "TargetPath" or "MorphMapPath" => L.T("JSON 文件 (*.json)|*.json"),
+            "CorePath" => L.T("转换核心 (VmdConverterCore.exe)|VmdConverterCore.exe"),
+            _ => L.T("VMD 动作 (*.vmd)|*.vmd")
         };
-        var dialog = new OpenFileDialog { Title = "选择文件", Filter = filter, CheckFileExists = true };
+        var dialog = new OpenFileDialog { Title = L.T("选择文件"), Filter = filter, CheckFileExists = true };
         if (dialog.ShowDialog(this) != true) return;
         typeof(WorkspaceViewModel).GetProperty(name)!.SetValue(vm, dialog.FileName);
         vm.Changed(name);
@@ -82,9 +89,29 @@ public partial class MainWindow : Window
 
     private void OutputBrowse_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog { Title = "选择 Anim 输出目录", Multiselect = false };
+        var dialog = new OpenFolderDialog { Title = L.T("选择 Anim 输出目录"), Multiselect = false };
         if (Directory.Exists(vm.OutputDirectory)) dialog.InitialDirectory = vm.OutputDirectory;
         if (dialog.ShowDialog(this) == true) { vm.OutputDirectory = dialog.FolderName; vm.Changed(nameof(vm.OutputDirectory)); }
+    }
+
+    private void FacialBrowse_Click(object sender, RoutedEventArgs e)
+    {
+        if (!vm.IsIdle || sender is not Button { DataContext: MotionJob job }) return;
+        var dialog = new OpenFileDialog { Title = L.F("选择表情 VMD · {0}", job.Name), Filter = L.T("Facial / 表情 VMD (*.vmd)|*.vmd"), CheckFileExists = true };
+        if (dialog.ShowDialog(this) == true) job.ExpressionPath = dialog.FileName;
+    }
+    private void FacialClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (vm.IsIdle && sender is Button { DataContext: MotionJob job }) job.ExpressionPath = "";
+    }
+    private void Facial_Drop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        if (!vm.IsIdle || sender is not FrameworkElement { DataContext: MotionJob job } ||
+            e.Data.GetData(DataFormats.FileDrop) is not string[] files) return;
+        if (files.Length != 1 || !File.Exists(files[0]) || !Path.GetExtension(files[0]).Equals(".vmd", StringComparison.OrdinalIgnoreCase))
+        { ShowError(L.T("请拖入一个有效的 Facial / 表情 VMD 文件。")); return; }
+        job.ExpressionPath = Path.GetFullPath(files[0]);
     }
 
     private void OnDragOver(object sender, DragEventArgs e)
@@ -103,8 +130,44 @@ public partial class MainWindow : Window
         if (!vm.IsIdle) return;
         foreach (var item in QueueList.SelectedItems.Cast<MotionJob>().ToArray()) vm.Jobs.Remove(item);
     }
-    private void Queue_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Delete) { RemoveSelected(); e.Handled = true; } }
-    private void Workspace_Click(object sender, RoutedEventArgs e) => QueueList.Focus();
+    private void Queue_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Delete && e.OriginalSource is not TextBoxBase && e.OriginalSource is not ComboBox)
+        { RemoveSelected(); e.Handled = true; }
+    }
+    private void Navigate(string page)
+    {
+        WorkspacePage.Visibility = page == "workspace" ? Visibility.Visible : Visibility.Collapsed;
+        PreferencesPage.Visibility = page == "settings" ? Visibility.Visible : Visibility.Collapsed;
+        AboutPage.Visibility = page == "about" ? Visibility.Visible : Visibility.Collapsed;
+        vm.SetPage(page);
+    }
+    private void Workspace_Click(object sender, RoutedEventArgs e) { Navigate("workspace"); QueueList.Focus(); }
+    private void Settings_Click(object sender, RoutedEventArgs e) => Navigate("settings");
+    private void About_Click(object sender, RoutedEventArgs e) => Navigate("about");
+    private void SaveSettings_Click(object sender, RoutedEventArgs e)
+    {
+        try { vm.SaveSettings(); vm.SettingsFeedback = "设置已保存"; }
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException) { vm.SettingsFeedback = ex.Message; }
+    }
+    private void OpenDocument(string path)
+    {
+        try
+        {
+            if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            else
+            {
+                var start = new ProcessStartInfo("notepad.exe") { UseShellExecute = false };
+                start.ArgumentList.Add(path);
+                Process.Start(start);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) { ShowError(ex.Message); }
+    }
+    private void Link_Click(object sender, RoutedEventArgs e) { if (sender is Button { Tag: string url }) OpenDocument(url); }
+    private void Readme_Click(object sender, RoutedEventArgs e) => OpenDocument(Path.Combine(AppContext.BaseDirectory, L.Instance.Language == "zh-CN" ? "README.zh-CN.md" : "README.md"));
+    private void License_Click(object sender, RoutedEventArgs e) => OpenDocument(Path.Combine(AppContext.BaseDirectory, "LICENSE"));
     private async void ReadIk_Click(object sender, RoutedEventArgs e) => await RefreshIkAsync();
     private async void PmxPath_LostFocus(object sender, RoutedEventArgs e)
     {
@@ -136,7 +199,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            if (!Directory.Exists(vm.OutputDirectory)) throw new IOException("输出目录尚不存在，请先完成转换或选择已有目录。");
+            if (!Directory.Exists(vm.OutputDirectory)) throw new IOException(L.T("输出目录尚不存在，请先完成转换或选择已有目录。"));
             var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
             start.ArgumentList.Add(Path.GetFullPath(vm.OutputDirectory)); Process.Start(start);
         }
@@ -147,9 +210,10 @@ public partial class MainWindow : Window
         try
         {
             var options = vm.Snapshot();
-            options.Validate(vm.Jobs.Select(j => j.InputPath).ToArray());
+            if (vm.Jobs.Count == 0) throw new ArgumentException(L.T("请先添加至少一个 VMD 动作。"));
             var job = QueueList.SelectedItem as MotionJob ?? vm.Jobs[0];
-            options = job.WithIk(options);
+            options = job.WithOptions(options);
+            options.Validate([job.InputPath]);
             var example = Path.Combine(Path.GetFullPath(options.OutputDirectory), Path.GetFileNameWithoutExtension(job.InputPath) + ".anim");
             Clipboard.SetText(ConversionOptions.DisplayCommand(options.BuildStartInfo(job.InputPath, example)));
             vm.StatusText = "所选动作的 PowerShell 转换命令已复制";
@@ -164,15 +228,19 @@ public partial class MainWindow : Window
         if (!vm.LoadedIkPmx.Equals(vm.PmxPath.Trim(), StringComparison.OrdinalIgnoreCase)) await RefreshIkAsync();
         if (!vm.CanConvert) return;
         if (!vm.LoadedIkPmx.Equals(vm.PmxPath.Trim(), StringComparison.OrdinalIgnoreCase))
-        { ShowError("请先成功读取源 PMX 的 IK 列表，再开始转换。"); return; }
+        { ShowError(L.T("请先成功读取源 PMX 的 IK 列表，再开始转换。")); return; }
         ConversionOptions options;
         MotionJob[] batch = vm.Jobs.ToArray();
         Dictionary<MotionJob, ConversionOptions> jobOptions;
         try
         {
             options = vm.Snapshot();
-            options.Validate(batch.Select(j => j.InputPath).ToArray());
-            jobOptions = batch.ToDictionary(job => job, job => job.WithIk(options));
+            jobOptions = batch.ToDictionary(job => job, job => job.WithOptions(options));
+            foreach (var job in batch)
+            {
+                try { jobOptions[job].Validate([job.InputPath]); }
+                catch (ArgumentException ex) { throw new ArgumentException($"{job.Name}：{ex.Message}", ex); }
+            }
             Directory.CreateDirectory(options.OutputDirectory);
             vm.SaveSettings();
         }
@@ -184,7 +252,7 @@ public partial class MainWindow : Window
         vm.IsRunning = true; vm.ProgressValue = 0;
         int completed = 0, failed = 0;
         foreach (var job in batch) { job.Status = "待转换"; job.OutputPath = ""; }
-        vm.AppendLog($"[{DateTime.Now:HH:mm:ss}] 开始批次 · {batch.Length} 个动作");
+        vm.AppendLog(L.F("[{0:HH:mm:ss}] 开始批次 · {1} 个动作", DateTime.Now, batch.Length));
         try
         {
             foreach (var job in batch)
@@ -194,8 +262,8 @@ public partial class MainWindow : Window
                 string? staging = null;
                 bool success = false;
                 job.Status = "转换中";
-                vm.StatusText = $"正在转换 · {job.Name}";
-                vm.ProgressText = $"已完成 {completed} / {batch.Length} · 失败 {failed} · 当前文件处理中";
+                vm.StatusText = L.F("正在转换 · {0}", job.Name);
+                vm.ProgressText = L.F("已完成 {0} / {1} · 失败 {2} · 当前文件处理中", completed, batch.Length, failed);
                 try
                 {
                     reserved = OutputPaths.Reserve(options.OutputDirectory, job.InputPath);
@@ -211,15 +279,15 @@ public partial class MainWindow : Window
                     job.OutputPath = reserved;
                     success = true; completed++;
                     job.Status = "已完成";
-                    job.Detail = $"{result.Samples:N0} 个采样 · {result.Bytes / 1024d:N0} KB · {result.ElapsedMs / 1000d:0.0} 秒";
-                    vm.AppendLog($"完成 · {job.Name} · {job.Detail} · {reserved}");
+                    job.Detail = L.F("{0:N0} 个采样 · {1:N0} KB · {2:0.0} 秒", result.Samples, result.Bytes / 1024d, result.ElapsedMs / 1000d);
+                    vm.AppendLog(L.F("完成 · {0} · {1} · {2}", job.Name, job.Detail, reserved));
                     vm.CompleteMotion(job);
                 }
-                catch (OperationCanceledException) { job.Status = "已取消"; job.Detail = "任务已停止，可重新开始。"; throw; }
+                catch (OperationCanceledException) { job.Status = "已取消"; job.Detail = L.T("任务已停止，可重新开始。"); throw; }
                 catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException)
                 {
-                    failed++; job.Status = "失败"; job.Detail = "查看运行日志以定位问题";
-                    vm.AppendLog($"失败 · {job.Name}\n{ex.Message}"); vm.ShowLog = true;
+                    failed++; job.Status = "失败"; job.Detail = L.T("查看运行日志以定位问题");
+                    vm.AppendLog(L.F("失败 · {0}\n{1}", job.Name, ex.Message)); vm.ShowLog = true;
                 }
                 finally
                 {
@@ -234,14 +302,14 @@ public partial class MainWindow : Window
                 }
                 vm.ProgressValue = (completed + failed) * 100d / batch.Length;
             }
-            vm.StatusText = failed == 0 ? "转换完成，动作已就绪" : $"批次结束 · {failed} 个动作需要处理";
-            vm.ProgressText = $"成功 {completed} / {batch.Length} · 失败 {failed} · 可打开输出目录查看 .anim";
+            vm.StatusText = failed == 0 ? L.T("转换完成，动作已就绪") : L.F("批次结束 · {0} 个动作需要处理", failed);
+            vm.ProgressText = L.F("成功 {0} / {1} · 失败 {2} · 可打开输出目录查看 .anim", completed, batch.Length, failed);
         }
         catch (OperationCanceledException)
         {
             vm.StatusText = "转换已取消";
-            vm.ProgressText = $"保留 {completed} 个已完成结果 · 剩余动作可重新开始";
-            vm.AppendLog("用户取消批次。已清理当前任务的临时文件。");
+            vm.ProgressText = L.F("保留 {0} 个已完成结果 · 剩余动作可重新开始", completed);
+            vm.AppendLog(L.T("用户取消批次。已清理当前任务的临时文件。"));
         }
         finally { cancellation = null; vm.IsRunning = false; }
     }
@@ -274,6 +342,6 @@ public partial class MainWindow : Window
     private void TryDelete(string path)
     {
         try { File.Delete(path); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { vm.AppendLog("临时文件清理失败：" + path + " · " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { vm.AppendLog(L.T("临时文件清理失败：") + path + " · " + ex.Message); }
     }
 }

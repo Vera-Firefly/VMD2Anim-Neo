@@ -32,7 +32,11 @@ try {
     }
     & dotnet publish src/Vmd2Anim.Neo/Vmd2Anim.Neo.csproj -c Release -r win-x64 --self-contained $selfContained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $destination
     Assert-Success 'Desktop publish'
-    Copy-Item -LiteralPath (Join-Path $repo 'README.md') -Destination $destination
+    foreach ($name in @('README.md', 'README.zh-CN.md', 'LICENSE')) {
+        Copy-Item -LiteralPath (Join-Path $repo $name) -Destination $destination
+    }
+    New-Item -ItemType Directory -Path (Join-Path $destination 'docs') -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $repo 'docs/BUILD.md') -Destination (Join-Path $destination 'docs')
     Copy-Item -LiteralPath (Join-Path $core 'LICENSE') -Destination (Join-Path $destination 'VMD-Converter-Core-LICENSE.txt')
     foreach ($name in @('LICENSE','NOTICE')) {
         Copy-Item -LiteralPath (Join-Path $core "third_party/Unity-HPS/$name") -Destination (Join-Path $destination "Unity-HPS-$name.txt")

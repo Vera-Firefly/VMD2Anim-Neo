@@ -1,73 +1,83 @@
 # VMD2Anim-Neo
 
-Windows 图形化 VMD → Unity `.anim` 转换工具，支持批量转换、拖放文件、Humanoid / FK 输出，以及每个动作独立的源 IK 设置。转换时无需打开 Unity。
+English · [简体中文](README.zh-CN.md)
 
-## 下载与运行
+A Windows desktop converter for MMD VMD motions to Unity `.anim` files. Supports batch conversion, drag and drop, Humanoid and FK output, and independent output modes, Facial files and source IK settings for each motion. Unity does not need to be open during conversion.
 
-在 [Releases](https://github.com/Vera-Firefly/VMD2Anim-Neo/releases) 下载 `VMD2Anim-Neo-win-x64.zip`，完整解压后运行 `VMD2Anim-Neo.exe`。请保留同目录的 `Core` 文件夹及许可证文件，不要在压缩包内直接运行。
+## Download and run
 
-- 支持 Windows x64；正式发布包自带 .NET 运行时，无需另装 .NET。
-- Windows 11 22H2 及以上开启系统透明效果后显示亚克力背景；其他环境使用浅色背景。
-- 尚无 Release 时，可在 [Actions](https://github.com/Vera-Firefly/VMD2Anim-Neo/actions/workflows/windows.yml) 的成功构建中下载 `VMD2Anim-Neo-win-x64` 产物。解开产物后，再解压其中的程序 ZIP。
+Download `VMD2Anim-Neo-win-x64.zip` from [Releases](https://github.com/Vera-Firefly/VMD2Anim-Neo/releases), extract the entire archive, and run `VMD2Anim-Neo.exe`. Keep the `Core` folder and license files beside the app. Do not run it inside the ZIP.
 
-## 转换动作
+- Windows x64. The default release package includes the .NET runtime.
+- Acrylic is available on Windows 11 22H2 and later when system transparency effects are enabled. Other systems use a light background.
+- If no release is available, download the `VMD2Anim-Neo-win-x64` artifact from a successful [Actions build](https://github.com/Vera-Firefly/VMD2Anim-Neo/actions/workflows/windows.yml). Extract the artifact, then extract the app ZIP inside it.
 
-1. 选择源 **PMX** 模型。PMX 提供源骨架与 IK 约束，是转换的必需文件。
-2. 点击 **添加 VMD**，或把一个或多个 VMD 拖入动作队列。拖入 PMX 也可设置源模型。
-3. 选择目标骨架与动画输出模式。没有目标模型时，选择 **使用源 PMX 骨架**。
-4. 设置输出目录、采样率和位置缩放，点击 **开始转换**。
-5. 完成后点击 **打开输出目录**，将生成的 `.anim` 导入 Unity，并配置到对应角色的 Animator。
+## Convert motions
 
-成功的动作自动移出队列，全部成功后列表清空。失败、取消和未处理的动作保留，便于重试。转换结果与错误详情可在 **运行日志** 中查看。
+1. Choose a source **PMX** model. Its skeleton and IK constraints are required.
+2. Click **Add VMD**, or drop one or more VMD files into the motion queue. Dropping a PMX also sets the source model.
+3. Choose the target skeleton and default animation output mode. Choose **Source PMX skeleton** if you have no target model.
+4. Set the output folder, sample rate and position scale, then click **Convert**.
+5. Click **Open output folder**, import the generated `.anim` files into Unity, and assign them to the matching character's Animator.
 
-同名输出自动编号，保留已有文件。点击 **取消** 会停止当前转换，已完成的结果继续保留。选中队列动作后可点击 **移除所选**，下方待转换总数随之更新。
+Successful motions leave the queue automatically. Failed, cancelled and unprocessed motions stay for retry. Open **Conversion log** to review results and errors.
 
-## 目标骨架与输出模式
+Existing output files are preserved: duplicate names receive a numeric suffix. **Cancel** stops the current conversion and retains completed results. Select motions and click **Remove selected** to remove them from the queue; the pending total updates immediately.
 
-| 目标 | 文件与用途 |
+## Target skeletons and output modes
+
+| Target | File and purpose |
 | --- | --- |
-| 使用源 PMX 骨架 | 无需目标文件，输出 Humanoid · 源 IK 动画。 |
-| 目标 FBX 模型 | 选择 `.fbx`；如有 Unity `.meta`，请保留在 FBX 旁边，以便读取骨骼映射与导入设置。 |
-| HPS 标定 Rig | 选择从 Unity 导出的 HPS rig JSON，使用目标 Avatar 的标定信息。 |
-| 骨架 Descriptor | 选择由 VMD-Converter-Core 导出的骨架描述 JSON。 |
+| Source PMX skeleton | No target file required. Produces Humanoid · Source IK animation. |
+| Target FBX model | Select an `.fbx`. Keep its Unity `.meta` alongside it, if available, to retain bone mapping and import settings. |
+| HPS calibrated rig | Select the HPS rig JSON exported from Unity to use the target Avatar's calibration. |
+| Skeleton descriptor | Select a skeleton descriptor JSON exported by VMD-Converter-Core. |
 
-选择目标骨架后，可使用 Humanoid 或 FK 的正常、下肢、上肢、全身拟合模式。Humanoid 输出用于对应的 Humanoid 角色；FK 曲线绑定目标骨骼路径，播放对象需保留对应层级和命名。拟合模式仍输出全身动作。
+With a target selected, Humanoid and FK modes offer Normal, Legs, Arms and Full body fitting. Humanoid output is intended for the matching Humanoid character. FK curves bind to target bone paths, so the playback character must keep the matching hierarchy and names. Fitting modes still produce full-body motion.
 
-## 每个动作独立设置 IK
+## Per-motion settings
 
-选择 PMX 后点击 **读取源 IK**，再展开队列中动作的 **源 IK**：
+Expand **Motion settings** in a queue row:
 
-- **跟随 VMD**：使用动作文件中的 IK 开关。
-- **强制开启**：在该动作中启用指定源 IK。
-- **强制关闭**：在该动作中禁用指定源 IK。
+- **Animation output**: choose an independent mode, or **Follow global settings** to use the output mode on the right. Without a target, only source Humanoid output is available. Removing the target resets incompatible overrides to the global default.
+- **Facial / Expressions**: choose, paste or drop a separate Facial VMD. **Clear** restores the default. **Settings → Advanced parameters → Default Facial VMD** applies when no per-motion file is set. Leave both blank to use expressions from the motion itself. Enable **Bake expressions / BlendShape** to export expression curves.
+- **Source IK**: after choosing the PMX, click **Read source IK**. Each bone can **Follow VMD**, **Force on** or **Force off**. **All source IK** changes all bones for this motion. Other motions keep their own settings. Changing PMX requires reading IK and configuring overrides again.
 
-**全部源 IK** 可批量设置当前动作，也可逐个骨骼调整。不同动作的设置互不影响。更换 PMX 后需要重新读取 IK，并重新设置覆盖。
+## Settings
 
-## 高级设置
+Open **Settings** in the left navigation to adjust language, expression baking, advanced parameters and the conversion Core.
 
-通常可先使用默认值。需要时展开 **高级参数**：
+The interface defaults to **System default**: Chinese Windows display languages use Simplified Chinese; other languages use English. You can choose English or Simplified Chinese manually. Switching takes effect immediately. Click **Save settings** to save, or close the app or start a conversion to save automatically.
 
-- **坐标转换 / 位置缩放**：调整动画朝向和位移比例。
-- **限定时长**：只转换开头指定秒数；留空转换完整动作。
-- **求解轮数 / 帧线程数 / 姿态缓存预算**：调整求解成本与资源占用。
-- **上肢插值误差**：控制上肢曲线插值；设为 `0` 使用线性插值。
-- **烘焙表情 / BlendShape**：导出表情曲线，可配合附加表情 VMD 与形态键映射 JSON。
-- **保持 FK 旋转连续性**：用于 FK 旋转曲线的连续处理。
+The default conversion values are a useful starting point. Advanced parameters include:
 
-## 常见问题
+- **Coordinate conversion / Position scale**: animation orientation and movement scale. Position scale remains in the workspace.
+- **Duration**: convert only the specified number of seconds from the start; blank converts the full motion.
+- **Solver passes / Frame threads / Pose cache budget**: solving cost and resource usage.
+- **Upper-body tangent error**: controls upper-body curve interpolation; `0` uses linear interpolation.
+- **Bake expressions / BlendShape**: export expression curves, optionally using a separate Facial VMD and morph-map JSON.
+- **Maintain FK rotation continuity**: continuity processing for FK rotations.
 
-**提示“待配置 Core”或缺少运行库**
+Under **Conversion Core**, select a complete Core runtime or copy a PowerShell conversion command for the selected motion. The copied command uses the original output name; check for existing files before running it manually.
 
-重新完整解压发布包，确认程序旁存在 `Core` 文件夹。也可展开 **转换核心**，选择完整运行目录中的 `VmdConverterCore.exe`，其 Shared、Hps、UnityHps.Core、UnityHps.Fbx 库需放在同一目录。
+## Troubleshooting
 
-**动画比例、朝向或骨骼效果不符合预期**
+**Configure Core or missing runtime libraries**
 
-检查 PMX 与 VMD 是否匹配、目标骨架类型、位置缩放和坐标转换。目标 FBX 可带上 Unity `.meta`；需要 Avatar 标定信息时使用 HPS rig。先设置短的限定时长检查结果，再转换整段动作。
+Extract the complete app package again and check for the `Core` folder. Alternatively, choose `VmdConverterCore.exe` under **Settings → Conversion Core**. Its Shared, Hps, UnityHps.Core and UnityHps.Fbx libraries must be in the same folder.
 
-**重新打开后队列为空**
+**Unexpected scale, orientation or bone motion**
 
-程序仅记忆设置，动作队列不会保存。设置位于 `%LOCALAPPDATA%\VMD2Anim-Neo\settings.json`。
+Check that PMX and VMD match, then review target type, position scale and coordinate conversion. Keep Unity `.meta` files with target FBX models. Use an HPS rig when Avatar calibration is needed. Try a short duration before converting the full motion.
 
-## 从源码构建
+**The queue is empty after reopening**
 
-参阅 [构建与打包](docs/BUILD.md)。转换核心通过 [VMD-Converter-Core](https://github.com/Vera-Firefly/VMD-Converter-Core) Git submodule 引入。
+Only settings are saved, not the motion queue. Settings are stored at `%LOCALAPPDATA%\VMD2Anim-Neo\settings.json`.
+
+## About and license
+
+The **About** page provides the app version, Core revision, user guide, project links and license. VMD2Anim Neo uses [Apache-2.0](LICENSE). The app package includes licenses and notices for Core, Unity-HPS and ufbx.
+
+## Build from source
+
+See [Build and packaging](docs/BUILD.md). The conversion engine is linked through the [VMD-Converter-Core](https://github.com/Vera-Firefly/VMD-Converter-Core) Git submodule.
