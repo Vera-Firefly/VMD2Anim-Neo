@@ -16,16 +16,15 @@ public abstract class Observable : INotifyPropertyChanged
 
 public sealed class MotionJob(string input) : Observable
 {
-    private static readonly OutputMode FollowDefault = new("", "跟随全局设置", "使用右侧转换设置中的动画输出模式。");
+    private static readonly OutputMode FollowDefault = new("", "跟随全局设置");
     public ObservableCollection<OutputMode> AvailableModes { get; } = [FollowDefault];
     private OutputMode selectedOutputMode = FollowDefault;
     public OutputMode SelectedOutputMode
     {
         get => selectedOutputMode;
-        set { if (value == null) return; selectedOutputMode = value; Notify(); Notify(nameof(OutputModeDescription)); Notify(nameof(OutputModeSummary)); }
+        set { if (value == null) return; selectedOutputMode = value; Notify(); Notify(nameof(OutputModeSummary)); }
     }
-    public string OutputModeDescription => SelectedOutputMode.Description;
-    public string OutputModeSummary => L.T("输出 · ") + SelectedOutputMode.Label;
+    public string OutputModeSummary => L.T("输出: ") + SelectedOutputMode.Label;
     public void SetOutputModes(IEnumerable<OutputMode> modes)
     {
         var value = SelectedOutputMode.Value;
@@ -36,7 +35,7 @@ public sealed class MotionJob(string input) : Observable
     public void RefreshLanguage()
     {
         foreach (var mode in AvailableModes) mode.RefreshLanguage();
-        Notify(nameof(OutputModeDescription)); Notify(nameof(OutputModeSummary));
+        Notify(nameof(OutputModeSummary));
         Notify(nameof(ExpressionSummary)); Notify(nameof(IkSummary)); Notify(nameof(Status)); Notify(nameof(Detail));
     }
     private string expressionPath = "";
@@ -46,7 +45,7 @@ public sealed class MotionJob(string input) : Observable
         set { expressionPath = value; Notify(); Notify(nameof(HasExpression)); Notify(nameof(ExpressionSummary)); }
     }
     public bool HasExpression => !string.IsNullOrWhiteSpace(ExpressionPath);
-    public string ExpressionSummary => HasExpression ? L.T("表情 · ") + Path.GetFileName(ExpressionPath.Trim()) : L.T("表情 · 默认");
+    public string ExpressionSummary => HasExpression ? L.T("表情: ") + Path.GetFileName(ExpressionPath.Trim()) : L.T("表情: 默认");
     public ObservableCollection<SourceIkSwitch> IkSwitches { get; } = [];
     private int ikDefaultIndex;
     public IReadOnlyList<IkMode> IkModes => IkMode.All;
@@ -55,7 +54,7 @@ public sealed class MotionJob(string input) : Observable
         get => ikDefaultIndex;
         set { ikDefaultIndex = Math.Clamp(value, 0, 2); foreach (var item in IkSwitches) item.Mode = IkMode.All[ikDefaultIndex]; Notify(); Notify(nameof(IkSummary)); }
     }
-    public string IkSummary => IkSwitches.Count == 0 ? L.T("源 IK · 等待读取 PMX") : L.F("源 IK · {0} 项覆盖", IkSwitches.Count(s => s.Mode.Value != "vmd"));
+    public string IkSummary => IkSwitches.Count == 0 ? L.T("源 IK: 等待读取 PMX") : L.F("源 IK: {0} 项覆盖", IkSwitches.Count(s => s.Mode.Value != "vmd"));
     public void SetIkBones(IEnumerable<SourceIkBone> bones, bool preserve)
     {
         var previous = preserve ? IkSwitches.ToDictionary(s => s.Bone.Key, s => s.Mode, StringComparer.Ordinal) : [];
@@ -88,28 +87,28 @@ public sealed class MotionJob(string input) : Observable
 public sealed class WorkspaceViewModel : Observable
 {
     public ObservableCollection<MotionJob> Jobs { get; } = [];
-    public OutputMode[] TargetKinds { get; } = [new("0", "使用源 PMX 骨架", ""), new("1", "目标 FBX 模型", ""), new("2", "HPS 标定 Rig · JSON", ""), new("3", "骨架 Descriptor · JSON", "")];
+    public OutputMode[] TargetKinds { get; } = [new("0", "使用源 PMX 骨架"), new("1", "目标 FBX 模型"), new("2", "HPS 标定 Rig（JSON）"), new("3", "骨架 Descriptor（JSON）")];
     public int[] SampleRates { get; } = [24, 30, 60, 120];
-    public OutputMode[] Coordinates { get; } = [new("0", "翻转 Z", ""), new("1", "翻转 X", ""), new("2", "绕 Y 轴旋转 180° · 默认", ""), new("3", "不转换坐标", "")];
+    public OutputMode[] Coordinates { get; } = [new("0", "翻转 Z"), new("1", "翻转 X"), new("2", "绕 Y 轴旋转 180° · 默认"), new("3", "不转换坐标")];
     public ObservableCollection<OutputMode> OutputModes { get; } =
     [
-        new("humanoid-ik", "Humanoid · 源 IK", "输出 Root 与肌肉曲线；使用 PMX 的 IK 求解。"),
-        new("target-humanoid", "Humanoid · 正常模式", "目标根运动、躯干和下肢；保留源 Humanoid 上肢。"),
-        new("target-humanoid-leg", "Humanoid · 下肢拟合", "显式使用目标下肢策略，输出整段全身动作。"),
-        new("target-humanoid-arm", "Humanoid · 上肢拟合", "拟合目标上肢，保留源躯干和下肢。"),
-        new("target-humanoid-all", "Humanoid · 全身拟合", "拟合目标全身，包含目标上肢反解。"),
-        new("target-fk", "FK · 正常模式", "沿目标骨骼路径输出局部旋转与必要位移。"),
-        new("target-fk-leg", "FK · 下肢拟合", "使用目标下肢策略，输出全身 FK 曲线。"),
-        new("target-fk-arm", "FK · 上肢拟合", "使用目标上肢拟合，输出全身 FK 曲线。"),
-        new("target-fk-all", "FK · 全身拟合", "拟合目标全身并输出目标骨架 FK 曲线。")
+        new("humanoid-ik", "Humanoid · 源 IK"),
+        new("target-humanoid", "Humanoid · 正常模式"),
+        new("target-humanoid-leg", "Humanoid · 下肢拟合"),
+        new("target-humanoid-arm", "Humanoid · 上肢拟合"),
+        new("target-humanoid-all", "Humanoid · 全身拟合"),
+        new("target-fk", "FK · 正常模式"),
+        new("target-fk-leg", "FK · 下肢拟合"),
+        new("target-fk-arm", "FK · 上肢拟合"),
+        new("target-fk-all", "FK · 全身拟合")
     ];
     private string corePath = FindCore();
     public string CorePath { get => corePath; set { corePath = value; Notify(); Notify(nameof(CoreStatus)); Notify(nameof(CoreStatusBrush)); } }
     public string PmxPath { get; set; } = "";
     public SourceIkBone[] SourceIkBones { get; private set; } = [];
     public string LoadedIkPmx { get; private set; } = "";
-    private string ikInfo = "选择 PMX 后读取源 IK；每个动作可单独设置。";
-    public string IkInfo { get => ikInfo == "ik-loaded" ? (SourceIkBones.Length == 0 ? L.T("此 PMX 没有 IK 骨骼。") : L.F("已读取 {0} 个源 IK · 在动作行内独立设置。", SourceIkBones.Length)) : L.T(ikInfo); set { ikInfo = value; Notify(); } }
+    private string ikInfo = "";
+    public string IkInfo { get => ikInfo == "ik-loaded" ? (SourceIkBones.Length == 0 ? L.T("此 PMX 没有 IK 骨骼。") : "") : L.T(ikInfo); set { ikInfo = value; Notify(); } }
     public void ApplyIkBones(string pmx, SourceIkBone[] bones)
     {
         bool preserve = LoadedIkPmx.Equals(pmx, StringComparison.OrdinalIgnoreCase);
@@ -138,14 +137,13 @@ public sealed class WorkspaceViewModel : Observable
         set
         {
             if (value is < 0 or > 3 || targetIndex == value) return;
-            targetIndex = value; TargetPath = ""; Notify(); Notify(nameof(TargetPath)); Notify(nameof(HasTarget)); Notify(nameof(TargetHint));
+            targetIndex = value; TargetPath = ""; Notify(); Notify(nameof(TargetPath)); Notify(nameof(HasTarget));
             SelectedMode = OutputModes[value == 0 ? 0 : 1];
             foreach (var job in Jobs) job.SetOutputModes(CompatibleModes);
         }
     }
     private IEnumerable<OutputMode> CompatibleModes => OutputModes.Where(m => HasTarget || m.Value == "humanoid-ik");
     public bool HasTarget => TargetIndex != 0;
-    public string TargetHint => TargetIndex switch { 0 => L.T("无需目标文件，直接使用 PMX Humanoid 骨架。"), 1 => L.T("自动读取相邻 .meta 的骨骼映射和导入设置。"), 2 => L.T("使用 Unity 导出的 HPS rig.json，保留标定。"), _ => L.T("使用由 Core 导出的骨架描述 JSON。") };
     private OutputMode? selectedMode;
     public OutputMode SelectedMode { get => selectedMode ?? OutputModes[0]; set { if (value == null) return; selectedMode = value; Notify(); } }
     public int SampleRate { get; set; } = 30;
@@ -171,9 +169,9 @@ public sealed class WorkspaceViewModel : Observable
     public string CoreStatus => HasCoreRuntime ? L.T("Core 已就绪") : L.T("待配置 Core");
     public bool HasCoreRuntime => File.Exists(CorePath) && new[] { "VmdConverterCore.Shared.dll", "VmdConverterCore.Hps.dll", "UnityHps.Core.dll", "UnityHps.Fbx.dll" }.All(n => File.Exists(Path.Combine(Path.GetDirectoryName(CorePath) ?? "", n)));
     public Brush CoreStatusBrush => new SolidColorBrush(HasCoreRuntime ? Color.FromRgb(33, 117, 86) : Color.FromRgb(155, 102, 33));
-    private string statusText = "准备好下一段动作";
+    private string statusText = "就绪";
     public string StatusText { get => L.T(statusText); set { statusText = value; Notify(); } }
-    private string progressText = "选择源 PMX，添加 VMD，然后开始转换。";
+    private string progressText = "";
     public string ProgressText { get => progressText == "queue-pending" ? PendingText : L.T(progressText); set { progressText = value; Notify(); } }
     private double progressValue;
     public double ProgressValue { get => progressValue; set { progressValue = value; Notify(); } }
@@ -181,7 +179,7 @@ public sealed class WorkspaceViewModel : Observable
     public string LogText { get => logText; set { logText = value; Notify(); } }
     private bool showLog;
     public bool ShowLog { get => showLog; set { showLog = value; Notify(); } }
-    public OutputMode[] Languages { get; } = [new("system", "跟随系统", ""), new("en", "English", ""), new("zh-CN", "简体中文", "")];
+    public OutputMode[] Languages { get; } = [new("system", "跟随系统"), new("en", "English"), new("zh-CN", "简体中文")];
     public int LanguageIndex
     {
         get => L.Instance.Preference switch { "en" => 1, "zh-CN" => 2, _ => 0 };
@@ -197,7 +195,7 @@ public sealed class WorkspaceViewModel : Observable
         page = value; Notify(nameof(PageTitle));
         Notify(nameof(IsWorkspacePage)); Notify(nameof(IsSettingsPage)); Notify(nameof(IsAboutPage));
     }
-    public string AppVersion => "Version " + (typeof(WorkspaceViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0");
+    public string AppVersion => "Version " + (typeof(WorkspaceViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.1");
     public string CoreBuild
     {
         get
@@ -221,14 +219,14 @@ public sealed class WorkspaceViewModel : Observable
             foreach (var job in Jobs) job.RefreshLanguage();
             // Refresh translated views only. Rebinding selectors can invoke setters with side effects,
             // such as applying the motion-wide IK default over individual bone overrides.
-            foreach (var property in new[] { nameof(LanguageIndex), nameof(TargetHint), nameof(IkInfo), nameof(QueueCountText),
+            foreach (var property in new[] { nameof(LanguageIndex), nameof(IkInfo), nameof(QueueCountText),
                 nameof(PendingText), nameof(ConvertButtonText), nameof(CoreStatus), nameof(StatusText), nameof(ProgressText),
                 nameof(PageTitle), nameof(SettingsFeedback) }) Notify(property);
         };
         Jobs.CollectionChanged += (_, _) =>
         {
         Notify(nameof(IsQueueEmpty)); Notify(nameof(QueueCountText)); Notify(nameof(PendingText)); Notify(nameof(CanConvert));
-        if (IsIdle) { StatusText = Jobs.Count == 0 ? "队列已清空" : "动作已加入，检查设置后即可转换"; ProgressText = "queue-pending"; }
+        if (IsIdle) { StatusText = Jobs.Count == 0 ? "队列已清空" : "动作已加入"; ProgressText = "queue-pending"; }
         };
     }
 

@@ -8,13 +8,11 @@ using System.Text.Json;
 namespace Vmd2Anim.Neo;
 
 // WPF tracks choices by identity; event subscriptions must not change equality or hash codes.
-public sealed class OutputMode(string value, string labelKey, string descriptionKey) : INotifyPropertyChanged
+public sealed class OutputMode(string value, string labelKey) : INotifyPropertyChanged
 {
     public string Value { get; } = value;
     public string LabelKey { get; } = labelKey;
-    public string DescriptionKey { get; } = descriptionKey;
     public string Label => L.T(LabelKey);
-    public string Description => L.T(DescriptionKey);
     public event PropertyChangedEventHandler? PropertyChanged;
     public void RefreshLanguage() => PropertyChanged?.Invoke(this, new(null));
     public override string ToString() => Label;

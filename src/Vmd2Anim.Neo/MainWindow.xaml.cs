@@ -67,7 +67,7 @@ public partial class MainWindow : Window
             catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException) { rejected.Add(raw); }
         }
         if (rejected.Count > 0) ShowError(L.T("部分文件未添加：仅支持有效的 VMD 和 PMX 文件。"), string.Join(Environment.NewLine, rejected));
-        else if (vm.Jobs.Count > 0) { vm.StatusText = "动作已加入，检查设置后即可转换"; vm.ProgressText = "queue-pending"; }
+        else if (vm.Jobs.Count > 0) { vm.StatusText = "动作已加入"; vm.ProgressText = "queue-pending"; }
     }
 
     private void Browse_Click(object sender, RoutedEventArgs e)
@@ -262,7 +262,7 @@ public partial class MainWindow : Window
                 string? staging = null;
                 bool success = false;
                 job.Status = "转换中";
-                vm.StatusText = L.F("正在转换 · {0}", job.Name);
+                vm.StatusText = L.F("正在转换: {0}", job.Name);
                 vm.ProgressText = L.F("已完成 {0} / {1} · 失败 {2} · 当前文件处理中", completed, batch.Length, failed);
                 try
                 {
@@ -303,7 +303,7 @@ public partial class MainWindow : Window
                 vm.ProgressValue = (completed + failed) * 100d / batch.Length;
             }
             vm.StatusText = failed == 0 ? L.T("转换完成，动作已就绪") : L.F("批次结束 · {0} 个动作需要处理", failed);
-            vm.ProgressText = L.F("成功 {0} / {1} · 失败 {2} · 可打开输出目录查看 .anim", completed, batch.Length, failed);
+            vm.ProgressText = L.F("成功 {0} / {1} · 失败 {2}", completed, batch.Length, failed);
         }
         catch (OperationCanceledException)
         {
